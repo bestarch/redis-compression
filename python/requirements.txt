@@ -1,3 +1,4 @@
 redis~=5.0.3
 jproperties==2.1.1
+lz4==4.3.2
 
