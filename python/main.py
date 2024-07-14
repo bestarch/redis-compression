@@ -33,6 +33,7 @@ def generate_metrics():
     before = calculate_memory_usage()
     logger.info(f'Memory usage before compression: {before:.2f} MB')
     logger.info('*********************************************************************')
+    logger.info('*********** Performing memory optimization. Please wait *************')
 
     Dataloader(conn).compress(pattern="_SAM_:")
     # Check total memory usage after data compression
