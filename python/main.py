@@ -5,6 +5,7 @@ import logging
 import traceback
 import sys
 import os
+import time
 sys.path.append(os.path.abspath('redis_connection'))
 from connection import RedisConnection
 
@@ -27,6 +28,7 @@ def calculate_memory_usage():
 
 def generate_metrics():
     conn.flushdb()
+    time.sleep(2)
     Dataloader(conn).generateBasic(pattern="_SAM_:")
 
     # Check total memory usage before compression
