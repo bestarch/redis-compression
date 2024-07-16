@@ -2,22 +2,28 @@ import redis
 import os
 import traceback
 from redis.exceptions import RedisError
+import ssl
 
 
 class RedisConnection:
     def __init__(self):
+
         try:
             password = os.getenv('PASSWORD')
             if not (password and password.strip()):
                 self.client = redis.Redis(
                     host=os.getenv('HOST', "localhost"),
                     port=os.getenv('PORT', 6379),
+                    ssl=True,
+                    ssl_cert_reqs=None,
                     decode_responses=False)
             else:
                 self.client = redis.Redis(
                     host=os.getenv('HOST', "localhost"),
                     port=os.getenv('PORT', 6379),
-                    password=password,
+                   # password=password,
+                    ssl=True,
+                    ssl_cert_reqs=None,  # Disable SSL certificate verification
                     decode_responses=False)
             self.client.ping()
         except RedisError as e:
