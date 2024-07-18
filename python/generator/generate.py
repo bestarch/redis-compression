@@ -1,11 +1,9 @@
-import sys
-import os
-
 import shlex
 from jproperties import Properties
 import logging
 import traceback
 import lz4.frame
+from util.dsType import DSType
 
 logger = logging.getLogger("DB Metrics")
 logging.basicConfig(encoding='utf-8', level=logging.INFO)
@@ -57,21 +55,21 @@ class Dataloader:
             while cursor != 0:
                 cursor, keys = self.conn.scan(cursor=cursor, match=pattern + '*', count=100)
                 for key in keys:
-                    key_type = self.conn.type(key).decode('utf-8')
-                    if key_type == 'hash':
+                    key_type = self.conn.type(key).decode('utf-8').upper()
+                    if key_type == DSType.HASH.name:
                         entries = self.conn.hgetall(key)
                         self.conn.delete(key)
                         key = key.decode('utf-8')
                         for i in range(record_num):
                             for hashElement, value in entries.items():
                                 self.conn.hset(key + str(i), hashElement.decode('utf-8'), self.serializeAndCompress(value))
-                    elif key_type == 'string':
+                    elif key_type == DSType.STRING.name:
                         value = self.conn.get(key)
                         self.conn.delete(key)
                         key = key.decode('utf-8')
                         for i in range(record_num):
                             self.conn.set(key + str(i), self.serializeAndCompress(value))
-                    elif key_type == 'zset':
+                    elif key_type == DSType.ZSET.name:
                         tuples = self.conn.zrange(key, 0, -1, withscores=True)
                         self.conn.delete(key)
                         key = key.decode('utf-8')

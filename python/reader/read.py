@@ -1,11 +1,6 @@
-import sys
-import os
-
-import shlex
-from jproperties import Properties
 import logging
-import traceback
 import lz4.frame
+from util.dsType import DSType
 
 logger = logging.getLogger("DB Metrics")
 logging.basicConfig(encoding='utf-8', level=logging.INFO)
@@ -24,12 +19,12 @@ class DataReader:
             while cursor != 0:
                 cursor, keys = self.conn.scan(cursor=cursor, match=pattern + '*', count=500)
                 for key in keys:
-                    key_type = self.conn.type(key).decode('utf-8')
-                    if key_type == 'hash':
+                    key_type = self.conn.type(key).decode('utf-8').upper()
+                    if key_type == DSType.HASH.name:
                         self.conn.hgetall(key)
-                    elif key_type == 'string':
+                    elif key_type == DSType.STRING.name:
                         self.conn.get(key).decode('utf-8')
-                    elif key_type == 'zset':
+                    elif key_type == DSType.ZSET.name:
                         self.conn.zrange(key, 0, -1, withscores=True)
                     else:
                         pass
@@ -49,15 +44,15 @@ class DataReader:
             while cursor != 0:
                 cursor, keys = self.conn.scan(cursor=cursor, match=pattern+'*', count=500)
                 for key in keys:
-                    key_type = self.conn.type(key).decode('utf-8')
-                    if key_type == 'hash':
+                    key_type = self.conn.type(key).decode('utf-8').upper()
+                    if key_type == DSType.HASH.name:
                         entries = self.conn.hgetall(key)
                         for hashElement, value in entries.items():
                             self.deSerializeAndDecompress(value)
-                    elif key_type == 'string':
+                    elif key_type == DSType.STRING.name:
                         value = self.conn.get(key)
                         self.deSerializeAndDecompress(value)
-                    elif key_type == 'zset':
+                    elif key_type == DSType.ZSET.name:
                         tuples = self.conn.zrange(key, 0, -1, withscores=True)
                         for member, score in tuples:
                             self.deSerializeAndDecompress(member)
