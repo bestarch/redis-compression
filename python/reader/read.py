@@ -35,12 +35,14 @@ class DataReader:
                         pass
         except Exception as e:
             print(f"Error while iterating through keys\nError: {str(e)}")
+        logger.info(f'Finished reading uncompressed data from Redis')
 
     def deSerializeAndDecompress(self, compressed):
         decompressed_bytes = lz4.frame.decompress(compressed)
         return decompressed_bytes
 
     def readAndDecompress(self, pattern):
+        logger.info(f'Reading data from Redis and decompressing it')
         try:
             # Use SCAN to iterate through keys
             cursor = '0'
@@ -63,3 +65,4 @@ class DataReader:
                         pass
         except Exception as e:
             print(f"Error while iterating through keys\nError: {str(e)}")
+        logger.info(f'Finished reading & decompressing the data from Redis')

@@ -28,25 +28,6 @@ def calculate_memory_usage():
     return (float(response['used_memory'])) / (1024 * 1024)
 
 
-def generate_metrics():
-    conn.flushdb()
-    time.sleep(2)
-    Dataloader(conn).generateBasic(pattern="_SAM_:")
-
-    # Check total memory usage before compression
-    before = calculate_memory_usage()
-    logger.info(f'Memory usage before compression: {before:.2f} MB')
-    logger.info('*********************************************************************')
-    logger.info('*********** Performing memory optimization. Please wait *************')
-
-    Dataloader(conn).compress(pattern="_SAM_:")
-    # Check total memory usage after data compression
-    after = calculate_memory_usage()
-    logger.info(f'Memory usage after compression: {after:.2f} MB')
-    logger.info(f'Actual dataset usage with compressed data: {before-after:.2f} MB')
-    logger.info(f'Optimization: {(before - after)*100/before:.2f}%')
-
-
 def initialise():
     conn.flushdb()
     path = 'config/master_data.txt'
@@ -69,16 +50,16 @@ def getOperationSet():
         '2': 'Get compressed data from Redis & decompress it. [Metrics: Application CPU]'
     }
 
-    logger.info('This application can perform following tasks')
-    print("Option 1::")
+    print('\nProvide one of the following options -->')
+    print("********* Option 1 *********")
     for key, value in operationSet1.items():
         print(f"{key}: {value}")
     print("")
-    print("Option 2::")
+    print("********* Option 2 *********")
     for key, value in operationSet2.items():
         print(f"{key}: {value}")
     print("")
-    print("Option 3::")
+    print("********* Option 3 *********")
     print("Flush the DB: 5")
     print("")
 
@@ -87,12 +68,13 @@ def getOperationSet():
         if str(prompt) == '1' or str(prompt) == '2' or str(prompt) == '5':
             return prompt
         else:
-            logger.error("\nInvalid option!!!")
+            logger.error("\n")
+            logger.error("Invalid option!!!")
 
 
 def main():
-    print("This application measures the memory Redis memory optimisation")
-    time.sleep(2)
+    print("The application measures the Redis memory optimisation")
+    time.sleep(1)
     selectedOps = getOperationSet()
 
     if int(selectedOps) == 1:
@@ -100,9 +82,8 @@ def main():
         # Check total memory usage after the operation
         before = calculate_memory_usage()
         logger.info(f'Memory usage after loading uncompressed data: {before:.2f} MB')
-        logger.info('Reading data from Redis...')
         DataReader(conn).read(pattern="_SAM_:")
-        logger.info('Reading completed')
+        time.sleep(0.5)
         prompt = input("Do you want to measure the memory for compressed data? (y/n)")
         if prompt == 'y':
             conn.flushdb()
@@ -111,23 +92,15 @@ def main():
             after = calculate_memory_usage()
             logger.info(f'Memory usage after compression: {after:.2f} MB')
 
-            logger.info(f'Actual dataset usage with compressed data: {before - after:.2f} MB')
+            logger.info(f'Actual dataset usage of compressed data: {before - after:.2f} MB')
             logger.info(f'Optimization achieved: {(before - after) * 100 / before:.2f}%')
-
-            logger.info('Reading data from Redis and applying uncompression ...')
             DataReader(conn).readAndDecompress(pattern="_SAM_:")
-            logger.info('Reading completed')
-        pass
     elif int(selectedOps) == 2:
         Dataloader(conn).generateAndCompress(pattern="_SAM_:", commands=commands)
         # Check total memory usage after the operation
         after = calculate_memory_usage()
-        logger.info(f'Memory usage after compression: {after:.2f} MB')
-
-        logger.info('Reading data from Redis and applying uncompression ...')
+        logger.info(f'Memory usage with compression: {after:.2f} MB')
         DataReader(conn).readAndDecompress(pattern="_SAM_:")
-        logger.info('Reading completed')
-        pass
     elif int(selectedOps) == 5:
         conn.flushdb()
 

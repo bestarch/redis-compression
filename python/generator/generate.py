@@ -61,23 +61,23 @@ class Dataloader:
                     if key_type == 'hash':
                         entries = self.conn.hgetall(key)
                         self.conn.delete(key)
+                        key = key.decode('utf-8')
                         for i in range(record_num):
-                            key = key.decode('utf-8')+str(i)
                             for hashElement, value in entries.items():
-                                self.conn.hset(key, hashElement.decode('utf-8'), self.serializeAndCompress(value))
+                                self.conn.hset(key + str(i), hashElement.decode('utf-8'), self.serializeAndCompress(value))
                     elif key_type == 'string':
                         value = self.conn.get(key)
                         self.conn.delete(key)
+                        key = key.decode('utf-8')
                         for i in range(record_num):
-                            key = key.decode('utf-8') + str(i)
-                            self.conn.set(key, self.serializeAndCompress(value))
+                            self.conn.set(key + str(i), self.serializeAndCompress(value))
                     elif key_type == 'zset':
                         tuples = self.conn.zrange(key, 0, -1, withscores=True)
                         self.conn.delete(key)
+                        key = key.decode('utf-8')
                         for i in range(record_num):
-                            key = key.decode('utf-8') + str(i)
                             for member, score in tuples:
-                                self.conn.zadd(key, {self.serializeAndCompress(member): score})
+                                self.conn.zadd(key + str(i), {self.serializeAndCompress(member): score})
                     else:
                         pass
         except Exception as e:
