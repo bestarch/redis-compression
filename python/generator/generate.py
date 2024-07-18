@@ -24,55 +24,77 @@ class Dataloader:
             traceback.print_exc()
             raise Exception('An error occurred while reading the master config data')
 
-    def generateBasic(self, pattern):
+    def generate(self, pattern, commands):
         logger.info(f'Generating sample data for usage')
         record_num = int(configs.get("KEY_TYPE_COUNT").data)
-        master_record_count = 0
-        with open(self.path, 'r') as file:
-            for line in file:
-                command = line.strip()
-                if command:
-                    master_record_count += 1
-                    for i in range(record_num):
-                        try:
-                            parts = shlex.split(command)
-                            parts[1] = pattern + parts[1] + ":" + str(i)
-                            self.conn.execute_command(*parts)
-                        except Exception as e:
-                            print(f"Failed to execute command: {command}\nError: {str(e)}\n")
+        master_record_count = len(commands)
+        for line in commands:
+            command = line.strip()
+            if command:
+                for i in range(record_num):
+                    try:
+                        parts = shlex.split(command)
+                        parts[1] = pattern + parts[1] + ":" + str(i)
+                        self.conn.execute_command(*parts)
+                    except Exception as e:
+                        print(f"Failed to execute command: {command}\nError: {str(e)}\n")
+        print(f"Loaded {master_record_count*record_num} records in Redis")
 
     def serializeAndCompress(self, bytess):
         # bytess = raw_string.encode('utf-8')
         compressed_val = lz4.frame.compress(bytess)
         return compressed_val
 
-    def compress(self, pattern):
-        # logger.info(f'Generating data without compression')
+
+    def generateAndCompress(self, pattern, commands):
+        self.init(commands, pattern)
+        logger.info(f'Generating sample data for usage')
+        record_num = int(configs.get("KEY_TYPE_COUNT").data)
+        master_record_count = len(commands)
         try:
             # Use SCAN to iterate through keys
             cursor = '0'
             while cursor != 0:
-                cursor, keys = self.conn.scan(cursor=cursor, match=pattern+'*', count=500)
+                cursor, keys = self.conn.scan(cursor=cursor, match=pattern + '*', count=100)
                 for key in keys:
                     key_type = self.conn.type(key).decode('utf-8')
-                    # print(f"Key: {key}, Type: {key_type}")
                     if key_type == 'hash':
                         entries = self.conn.hgetall(key)
-                        for hashElement, value in entries.items():
-                            self.conn.hset(key, hashElement.decode('utf-8'), self.serializeAndCompress(value))
-                            # print(f"Element: {hashElement}, Value: {self.serializeAndCompress(value)}")
+                        self.conn.delete(key)
+                        for i in range(record_num):
+                            key = key.decode('utf-8')+str(i)
+                            for hashElement, value in entries.items():
+                                self.conn.hset(key, hashElement.decode('utf-8'), self.serializeAndCompress(value))
                     elif key_type == 'string':
                         value = self.conn.get(key)
-                        self.conn.set(key, self.serializeAndCompress(value))
+                        self.conn.delete(key)
+                        for i in range(record_num):
+                            key = key.decode('utf-8') + str(i)
+                            self.conn.set(key, self.serializeAndCompress(value))
                     elif key_type == 'zset':
                         tuples = self.conn.zrange(key, 0, -1, withscores=True)
-                        for member, score in tuples:
-                            self.conn.zrem(key, member)
-                            self.conn.zadd(key, {self.serializeAndCompress(member): score})
+                        self.conn.delete(key)
+                        for i in range(record_num):
+                            key = key.decode('utf-8') + str(i)
+                            for member, score in tuples:
+                                self.conn.zadd(key, {self.serializeAndCompress(member): score})
                     else:
                         pass
         except Exception as e:
             print(f"Error while iterating through keys\nError: {str(e)}")
+        print(f"Loaded {master_record_count * record_num} records in Redis")
+
+
+    def init(self, commands, pattern):
+        for line in commands:
+            command = line.strip()
+            if command:
+                try:
+                    parts = shlex.split(command)
+                    parts[1] = pattern + parts[1]
+                    self.conn.execute_command(*parts)
+                except Exception as e:
+                    print(f"Failed to execute command: {command}\nError: {str(e)}\n")
 
 
     # This method is not in use
