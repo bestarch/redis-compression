@@ -1,8 +1,13 @@
 python/.idea/
 python/venv
+
 java/target/
 java/.classpath
 java/.factorypath
 java/.project
 java/.settings/
+
 *.DS_Store
+
+nodeJS/node_modules/
+nodeJS/.vscode/
