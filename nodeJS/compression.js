@@ -1,7 +1,7 @@
 const { commandOptions } = require('redis')
 const { loadSampleData } = require('./dataloader')
 const { redisClient } = require('./connection')
-const { compress } = require('./compress')
+const { compress } = require('./utility')
 
 async function convertAndCompress() {
     await loadSampleData();

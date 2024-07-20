@@ -1,6 +1,6 @@
 const { commandOptions } = require('redis')
 const { redisClient } = require('./connection')
-const { deCompress } = require('./compress')
+const { deCompress } = require('./utility')
 
 async function decompressAndStringify() {
     let cursor = 0;
