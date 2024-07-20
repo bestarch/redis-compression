@@ -1,7 +1,7 @@
 const { commandOptions } = require('redis')
 const { loadSampleData } = require('./dataloader')
 const { redisClient } = require('./connection')
-const lz4 = require('lz4')
+const { compress } = require('./compress')
 
 async function convertAndCompress() {
     await loadSampleData();
@@ -63,13 +63,6 @@ async function convertAndCompress() {
     console.log("Memory size after :: "+ after)
     console.log("Difference in KB:: "+ ((parseInt(before,10)-parseInt(after,10))/1024))
     redisClient.disconnect();
-}
-
-function compress(rawData) {
-    const output = Buffer.alloc(lz4.encodeBound(rawData.length));
-    const compressedSize = lz4.encodeBlock(rawData, output);
-    const compressed = output.slice(0, compressedSize);
-    return {compressed, size: rawData.length};
 }
 
 convertAndCompress();

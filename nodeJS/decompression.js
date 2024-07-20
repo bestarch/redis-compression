@@ -1,6 +1,6 @@
 const { commandOptions } = require('redis')
 const { redisClient } = require('./connection')
-const lz4 = require('lz4')
+const { deCompress } = require('./compress')
 
 async function decompressAndStringify() {
     let cursor = 0;
@@ -62,14 +62,6 @@ async function decompressAndStringify() {
 
     console.log('Existing data successfully uncompressed');
     redisClient.disconnect();
-}
-
-function deCompress(compressedData, size) {
-    const input = Buffer.from(compressedData);
-    const output = Buffer.alloc(size); 
-    const decompressedSize = lz4.decodeBlock(input, output);
-    const raw = output.slice(0, decompressedSize);
-    return raw;
 }
 
 decompressAndStringify();
