@@ -11,6 +11,7 @@ import java.util.stream.IntStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -46,8 +47,8 @@ public class CompressionDemoApplication implements CommandLineRunner {
 	@Autowired
 	private DecompressionLZ4Service decompressionLZ4Service;
 	
-	//@Value()
-	Integer recordCount=10;
+	@Value("${record_count:1}")
+	Integer recordCount;
 	
 	
 
@@ -67,6 +68,7 @@ public class CompressionDemoApplication implements CommandLineRunner {
 	
 	
 	private void init(Jedis jedis) {
+		jedis.flushDB();
 		PrimitiveIterator.OfInt iterator = IntStream.range(0, recordCount).iterator();
 		String prefix = "_SAM_:";
 		try {

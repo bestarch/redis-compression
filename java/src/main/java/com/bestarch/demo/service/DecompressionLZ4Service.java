@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.compress.compressors.lz4.FramedLZ4CompressorInputStream;
+import org.apache.commons.compress.compressors.lz4.FramedLZ4CompressorOutputStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.jedis.JedisConnection;
@@ -67,19 +68,17 @@ public class DecompressionLZ4Service {
 	}
 
 	public static byte[] decompress(byte[] compressedData) throws IOException {
-		try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(compressedData);
-			 FramedLZ4CompressorInputStream framedLZ4CompressorInputStream = 
-					 new FramedLZ4CompressorInputStream(byteArrayInputStream);
-			 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-
-			byte[] buffer = new byte[512];
-			int len;
-			while ((len = framedLZ4CompressorInputStream.read(buffer)) != -1) {
-				byteArrayOutputStream.write(buffer, 0, len);
-			}
-
-			return byteArrayOutputStream.toByteArray();
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(compressedData);
+		FramedLZ4CompressorOutputStream framedLZ4CompressorOutputStream = new FramedLZ4CompressorOutputStream(byteArrayOutputStream);
+		byte[] buffer = new byte[512];
+		int len;
+		while ((len = byteArrayInputStream.read(buffer)) != -1) {
+			framedLZ4CompressorOutputStream.write(buffer, 0, len);
 		}
+
+		return buffer;
+
 	}
 
 }
