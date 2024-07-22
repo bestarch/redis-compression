@@ -3,11 +3,9 @@ package com.bestarch.demo.service;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.compress.compressors.lz4.BlockLZ4CompressorOutputStream;
 import org.apache.commons.compress.compressors.lz4.FramedLZ4CompressorInputStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -20,33 +18,32 @@ import redis.clients.jedis.resps.ScanResult;
 import redis.clients.jedis.resps.Tuple;
 
 @Service
-public class CompressionLZ4Service {
+public class DecompressionLZ4Service {
 
 	@Autowired
 	RedisConnectionFactory redisConnectionFactory;
 
-	public void scanAndCompress() throws IOException {
+	public void scanAndDecompress() throws IOException {
 		JedisConnection jedisConnection = (JedisConnection) redisConnectionFactory.getConnection();
 		Jedis jedis = jedisConnection.getJedis();
 
-		String cursor = "0";
+		byte[] cursor = new byte[] {0};
 		ScanParams scanParams = new ScanParams().match("_SAM_:*").count(500);
 						
 		do {
-			ScanResult<String> scanResult = jedis.scan(cursor, scanParams);
-			cursor = scanResult.getCursor();
-			List<String> keys = scanResult.getResult();
+			ScanResult<byte[]> scanResult = jedis.scan(cursor, scanParams);
+			cursor = scanResult.getCursorAsBytes();
+			List<byte[]> keys = scanResult.getResult();
 
-			for (String key : keys) {
+			for (byte[] key : keys) {
 				String keytype = jedis.type(key);
 				System.out.println("Found key: " + key);
 				switch (keytype) {
 					case "hash" -> {
-						Map<String, String> map = jedis.hgetAll(key);
-						for (String k : map.keySet()) {
-							byte[] compressedBytes = compress(map.get(k));
-							// jedis.hdel(key, k);
-							jedis.hset(key.getBytes(), Map.of(k.getBytes(), compressedBytes));
+						Map<byte[], byte[]> map = jedis.hgetAll(key);
+						for (byte[] k : map.keySet()) {
+							byte[] decompressedBytes = decompress(map.get(k));
+							jedis.hset(key, Map.of(k, decompressedBytes));
 						}
 					}
 					case "zset" -> {
@@ -54,40 +51,28 @@ public class CompressionLZ4Service {
 						jedis.del(key);
 						for (Tuple t : tuples) {
 							double score = t.getScore();
-							byte[] compressedBytes = compress(t.getElement());
-							jedis.zrem(key, t.getElement());
-							jedis.zadd(key.getBytes(), score, compressedBytes);
+							byte[] decompressedBytes = decompress(t.getBinaryElement());
+							jedis.zadd(key, score, decompressedBytes);
 						}
 					}
 					case "string" -> {
-						String val = jedis.get(key);
-						byte[] compressedBytes = compress(val);
-						jedis.set(key.getBytes(), compressedBytes);
+						byte[] val = jedis.get(key);
+						byte[] decompressedBytes = decompress(val);
+						jedis.set(key, decompressedBytes);
 					}
 			  }
 			}
-		} while (!cursor.equals("0"));
+		} while (!new String(cursor).equals("0"));
 
 	}
 
-	private byte[] compress(String data) throws IOException {
-		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		try (BlockLZ4CompressorOutputStream lz4OutputStream = new BlockLZ4CompressorOutputStream(
-				byteArrayOutputStream)) {
-			lz4OutputStream.write(data.getBytes(StandardCharsets.UTF_8));
-			// lz4OutputStream.write(data);
-		}
-		byte[] resp = byteArrayOutputStream.toByteArray();
-		return resp;
-	}
-	
-	
 	public static byte[] decompress(byte[] compressedData) throws IOException {
 		try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(compressedData);
-			 FramedLZ4CompressorInputStream framedLZ4CompressorInputStream = new FramedLZ4CompressorInputStream(byteArrayInputStream);
+			 FramedLZ4CompressorInputStream framedLZ4CompressorInputStream = 
+					 new FramedLZ4CompressorInputStream(byteArrayInputStream);
 			 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
 
-			byte[] buffer = new byte[1024];
+			byte[] buffer = new byte[512];
 			int len;
 			while ((len = framedLZ4CompressorInputStream.read(buffer)) != -1) {
 				byteArrayOutputStream.write(buffer, 0, len);

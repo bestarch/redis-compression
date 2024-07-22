@@ -32,7 +32,6 @@ public class RedisConfig {
 	@Bean
 	RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
 		RedisTemplate<String, Object> template = new RedisTemplate<>();
-		//template.setDefaultSerializer(StringRedisSerializer.UTF_8);
 		template.setConnectionFactory(connectionFactory);
 		template.afterPropertiesSet();
 		return template;

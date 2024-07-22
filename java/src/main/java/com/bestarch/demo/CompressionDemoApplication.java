@@ -11,7 +11,6 @@ import java.util.stream.IntStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -22,6 +21,7 @@ import org.springframework.data.redis.connection.jedis.JedisConnection;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import com.bestarch.demo.service.CompressionLZ4Service;
+import com.bestarch.demo.service.DecompressionLZ4Service;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Protocol;
@@ -43,6 +43,9 @@ public class CompressionDemoApplication implements CommandLineRunner {
 	@Autowired
 	private CompressionLZ4Service compressionLZ4Service;
 	
+	@Autowired
+	private DecompressionLZ4Service decompressionLZ4Service;
+	
 	//@Value()
 	Integer recordCount=10;
 	
@@ -58,6 +61,7 @@ public class CompressionDemoApplication implements CommandLineRunner {
 		Jedis jedis = jedisConnection.getJedis();
 		init(jedis);
 		compressionLZ4Service.scanAndCompress();
+		decompressionLZ4Service.scanAndDecompress();
 		
 	}
 	
