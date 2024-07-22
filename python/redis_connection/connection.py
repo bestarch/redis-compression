@@ -21,8 +21,8 @@ class RedisConnection:
                 self.client = redis.Redis(
                     host=os.getenv('HOST', "localhost"),
                     port=os.getenv('PORT', 6379),
-                   # password=password,
-                    ssl=True,
+                    password=password,
+                    #ssl=True,
                     ssl_cert_reqs=None,  # Disable SSL certificate verification
                     decode_responses=False)
             self.client.ping()

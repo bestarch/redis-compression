@@ -77,5 +77,17 @@ public class CompressionLZ4Service {
 		byte[] resp = byteArrayOutputStream.toByteArray();
 		return resp;
 	}
+	
+	
+	private byte[] decompress(byte[] data) throws IOException {
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		try (BlockLZ4CompressorOutputStream lz4OutputStream = new BlockLZ4CompressorOutputStream(
+				byteArrayOutputStream)) {
+			lz4OutputStream.write(data.getBytes(StandardCharsets.UTF_8));
+			// lz4OutputStream.write(data);
+		}
+		byte[] resp = byteArrayOutputStream.toByteArray();
+		return resp;
+	}
 
 }
