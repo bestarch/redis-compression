@@ -2,7 +2,7 @@ package compression_util
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 
 	"github.com/pierrec/lz4"
 )
@@ -19,7 +19,9 @@ func Compress(raw []byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func Decompress(compressesBytes []byte) ([]byte, error) {
-	reader := lz4.NewReader(bytes.NewReader(compressesBytes))
-	return ioutil.ReadAll(reader)
+func Decompress(compressedBytes []byte) ([]byte, error) {
+	compressedReader := bytes.NewReader(compressedBytes)
+	reader := lz4.NewReader(compressedReader)
+	bytes, error := io.ReadAll(reader)
+	return bytes, error
 }
