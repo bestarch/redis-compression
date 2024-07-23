@@ -22,6 +22,7 @@ class Dataloader:
             traceback.print_exc()
             raise Exception('An error occurred while reading the master config data')
 
+    # This is Deprecated
     def generate(self, pattern, commands):
         record_num = int(configs.get("KEY_TYPE_COUNT").data)
         master_record_count = len(commands)
@@ -136,7 +137,7 @@ class Dataloader:
             print(f"Error while iterating through keys\nError: {str(e)}")
 
 
-
+    # This is Deprecated
     def generateAndCompress(self, pattern, commands):
         self.init(commands, pattern)
         record_num = int(configs.get("KEY_TYPE_COUNT").data)

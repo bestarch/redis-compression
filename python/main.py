@@ -85,7 +85,7 @@ def main():
     # Calculates the difference
     if int(selectedOps) == 1:
         startTime = time.time()
-        Dataloader(conn).generate(pattern="_SAM_:", commands=commands)
+        Dataloader(conn).generateV2(pattern="_SAM_:", commands=commands)
         endTime = time.time()
         output.append(f"Time taken to ingest raw data {(endTime - startTime):.3f} seconds")
         print(f"Time taken to ingest raw data {(endTime - startTime):.3f} seconds")
@@ -113,7 +113,7 @@ def main():
     # Only loads raw data
     elif int(selectedOps) == 2:
         startTime = time.time()
-        Dataloader(conn).generate(pattern="_SAM_:", commands=commands)
+        Dataloader(conn).generateV2(pattern="_SAM_:", commands=commands)
         endTime = time.time()
         output.append(f"Time taken to ingest raw data {(endTime - startTime):.3f} seconds")
         print(f"Time taken to ingest raw data {(endTime - startTime):.3f} seconds")
@@ -134,7 +134,7 @@ def main():
 
     # Reads raw data (This first generates sample raw data) and records the Time taken
     elif int(selectedOps) == 4:
-        Dataloader(conn).generate(pattern="_SAM_:", commands=commands)
+        Dataloader(conn).generateV2(pattern="_SAM_:", commands=commands)
         startTime = time.time()
         DataReader(conn).read(pattern="_SAM_:")
         endTime = time.time()
