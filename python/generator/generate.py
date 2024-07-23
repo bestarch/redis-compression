@@ -40,17 +40,8 @@ class Dataloader:
 
 
     def generateV2(self, pattern, commands):
+        self.initialise(commands, pattern)
         record_num = int(configs.get("KEY_TYPE_COUNT").data)
-        master_record_count = len(commands)
-        for line in commands:
-            command = line.strip()
-            if command:
-                try:
-                    parts = shlex.split(command)
-                    parts[1] = pattern + parts[1]
-                    self.conn.execute_command(*parts)
-                except Exception as e:
-                    print(f"Failed to execute command: {command}\nError: {str(e)}\n")
         try:
             # Use SCAN to iterate through keys
             cursor = '0'
@@ -91,18 +82,8 @@ class Dataloader:
 
 
     def generateAndCompressV2(self, pattern, commands):
+        self.initialise(commands, pattern)
         record_num = int(configs.get("KEY_TYPE_COUNT").data)
-        master_record_count = len(commands)
-        for line in commands:
-            command = line.strip()
-            if command:
-                try:
-                    parts = shlex.split(command)
-                    parts[1] = pattern + parts[1]
-                    self.conn.execute_command(*parts)
-                except Exception as e:
-                    print(f"Failed to execute command: {command}\nError: {str(e)}\n")
-
         try:
             # Use SCAN to iterate through keys
             cursor = '0'
@@ -135,6 +116,17 @@ class Dataloader:
                         pass
         except Exception as e:
             print(f"Error while iterating through keys\nError: {str(e)}")
+
+    def initialise(self, commands, pattern):
+        for line in commands:
+            command = line.strip()
+            if command:
+                try:
+                    parts = shlex.split(command)
+                    parts[1] = pattern + parts[1]
+                    self.conn.execute_command(*parts)
+                except Exception as e:
+                    print(f"Failed to execute command: {command}\nError: {str(e)}\n")
 
 
     # This is Deprecated

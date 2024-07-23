@@ -14,7 +14,6 @@ from generate import Dataloader
 sys.path.append(os.path.abspath('reader'))
 from read import DataReader
 
-
 logger = logging.getLogger("DB Metrics")
 logging.basicConfig(encoding='utf-8', level=logging.INFO)
 configs = Properties()
@@ -39,18 +38,31 @@ def initialise():
 
 
 def getOperationSet():
-    operationSet1 = {
-        '1': 'Load uncompressed data in Redis [Metrics: Application CPU, Redis memory]',
-        '2': 'Get uncompressed data from Redis. [Metrics: Application CPU]',
-        '3': 'Load compressed data in Redis. [Metrics: Application CPU, Redis memory]',
-        '4': 'Get compressed data from Redis & decompress it. [Metrics: Application CPU]'
-    }
-    operationSet2 = {
-        '1': 'Load compressed data in Redis. [Metrics: Application CPU, Redis memory]',
-        '2': 'Get compressed data from Redis & decompress it. [Metrics: Application CPU]'
+    operationSet = {
+        "operationSet1": {
+            '1': ['Load raw data in Redis & records memory consumption & time taken',
+                  'Flush the DB',
+                  'Load compressed data in Redis & records memory consumption & time taken']
+        },
+        "operationSet2": {
+            '2': ['Load raw data in Redis & records memory consumption & time taken']
+        },
+        "operationSet3": {
+            '3': ['Load compressed data in Redis & records memory consumption & time taken']
+        },
+        "operationSet4": {
+            '3': ['Reads raw data (First it\'ll generate sample data) and records the time taken']
+        },
+        "operationSet5": {
+            '3': ['Reads compressed data, decodes it (First it\'ll generate sample data) and records the time taken']
+        }
     }
 
     print('\nProvide one of the following options -->')
+
+
+
+
     print("********* Option 1 *********")
     for key, value in operationSet1.items():
         print(f"{key}: {value}")
@@ -65,7 +77,8 @@ def getOperationSet():
 
     while True:
         prompt = input("Choose an option between 1-6 ('5' means Data will be deleted)): ")
-        if str(prompt) == '1' or str(prompt) == '2' or str(prompt) == '3' or str(prompt) == '4' or str(prompt) == '5' or str(prompt) == '6':
+        if str(prompt) == '1' or str(prompt) == '2' or str(prompt) == '3' or str(prompt) == '4' or str(
+                prompt) == '5' or str(prompt) == '6':
             return prompt
         else:
             logger.error("\n")
@@ -73,7 +86,7 @@ def getOperationSet():
 
 
 def main():
-    output=[]
+    output = []
     print("The application measures the Redis memory optimisation")
     time.sleep(1)
     selectedOps = getOperationSet()
@@ -161,6 +174,3 @@ if __name__ == '__main__':
     conn = RedisConnection().get_connection()
     initialise()
     main()
-
-
-
