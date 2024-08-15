@@ -22,24 +22,8 @@ class Dataloader:
             traceback.print_exc()
             raise Exception('An error occurred while reading the master config data')
 
-    # This is Deprecated
+
     def generate(self, pattern, commands):
-        record_num = int(configs.get("KEY_TYPE_COUNT").data)
-        master_record_count = len(commands)
-        for line in commands:
-            command = line.strip()
-            if command:
-                for i in range(record_num):
-                    try:
-                        parts = shlex.split(command)
-                        parts[1] = pattern + parts[1] + ":" + str(i)
-                        self.conn.execute_command(*parts)
-                    except Exception as e:
-                        print(f"Failed to execute command: {command}\nError: {str(e)}\n")
-        print(f"Loaded {master_record_count*record_num} records in Redis")
-
-
-    def generateV2(self, pattern, commands):
         self.initialise(commands, pattern)
         record_num = int(configs.get("KEY_TYPE_COUNT").data)
         try:
@@ -81,7 +65,7 @@ class Dataloader:
         return compressed_val
 
 
-    def generateAndCompressV2(self, pattern, commands):
+    def generateAndCompress(self, pattern, commands):
         self.initialise(commands, pattern)
         record_num = int(configs.get("KEY_TYPE_COUNT").data)
         try:
@@ -127,45 +111,6 @@ class Dataloader:
                     self.conn.execute_command(*parts)
                 except Exception as e:
                     print(f"Failed to execute command: {command}\nError: {str(e)}\n")
-
-
-    # This is Deprecated
-    def generateAndCompress(self, pattern, commands):
-        self.init(commands, pattern)
-        record_num = int(configs.get("KEY_TYPE_COUNT").data)
-        master_record_count = len(commands)
-        try:
-            # Use SCAN to iterate through keys
-            cursor = '0'
-            while cursor != 0:
-                cursor, keys = self.conn.scan(cursor=cursor, match=pattern + '*', count=100)
-                for key in keys:
-                    key_type = self.conn.type(key).decode('utf-8').upper()
-                    if key_type == DSType.HASH.name:
-                        entries = self.conn.hgetall(key)
-                        self.conn.delete(key)
-                        key = key.decode('utf-8')
-                        for i in range(record_num):
-                            for hashElement, value in entries.items():
-                                self.conn.hset(key + str(i), hashElement.decode('utf-8'), self.serializeAndCompress(value))
-                    elif key_type == DSType.STRING.name:
-                        value = self.conn.get(key)
-                        self.conn.delete(key)
-                        key = key.decode('utf-8')
-                        for i in range(record_num):
-                            self.conn.set(key + str(i), self.serializeAndCompress(value))
-                    elif key_type == DSType.ZSET.name:
-                        tuples = self.conn.zrange(key, 0, -1, withscores=True)
-                        self.conn.delete(key)
-                        key = key.decode('utf-8')
-                        for i in range(record_num):
-                            for member, score in tuples:
-                                self.conn.zadd(key + str(i), {self.serializeAndCompress(member): score})
-                    else:
-                        pass
-        except Exception as e:
-            print(f"Error while iterating through keys\nError: {str(e)}")
-        print(f"Loaded {master_record_count * record_num} records in Redis")
 
 
     def init(self, commands, pattern):

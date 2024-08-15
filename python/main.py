@@ -39,49 +39,33 @@ def initialise():
 
 def getOperationSet():
     operationSet = {
-        "operationSet1": {
-            '1': ['Load raw data in Redis & records memory consumption & time taken',
-                  'Flush the DB',
-                  'Load compressed data in Redis & records memory consumption & time taken']
-        },
-        "operationSet2": {
-            '2': ['Load raw data in Redis & records memory consumption & time taken']
-        },
-        "operationSet3": {
-            '3': ['Load compressed data in Redis & records memory consumption & time taken']
-        },
-        "operationSet4": {
-            '3': ['Reads raw data (First it\'ll generate sample data) and records the time taken']
-        },
-        "operationSet5": {
-            '3': ['Reads compressed data, decodes it (First it\'ll generate sample data) and records the time taken']
-        }
+        '1': ['Load raw data in Redis & records memory consumption & time taken',
+              'Flush the DB',
+              'Load compressed data in Redis & records memory consumption & time taken'],
+        '2': ['Load raw data in Redis & records memory consumption & time taken'],
+        '3': ['Load compressed data in Redis & records memory consumption & time taken'],
+        '4': ['Reads raw data (First it\'ll generate sample data) and records the time taken'],
+        '5': ['Reads compressed data, decodes it (First it\'ll generate sample data) and records the time taken'],
+        '6': ['Flush the DB']
     }
 
     print('\nProvide one of the following options -->')
+    print("********* Options *********")
 
+    for key, value in operationSet.items():
+        print(f"\nEnter '{key}' for:")
+        for options in value:
+            print(f"\t--> {options}")
 
-
-
-    print("********* Option 1 *********")
-    for key, value in operationSet1.items():
-        print(f"{key}: {value}")
-    print("")
-    print("********* Option 2 *********")
-    for key, value in operationSet2.items():
-        print(f"{key}: {value}")
-    print("")
-    print("********* Option 3 *********")
-    print("Flush the DB: 5")
-    print("")
+    record_num = int(configs.get("KEY_TYPE_COUNT").data)
+    print(f"\n**** Sampling will be done for {record_num * 10} records ****\n")
 
     while True:
-        prompt = input("Choose an option between 1-6 ('5' means Data will be deleted)): ")
-        if str(prompt) == '1' or str(prompt) == '2' or str(prompt) == '3' or str(prompt) == '4' or str(
-                prompt) == '5' or str(prompt) == '6':
+        prompt = input("Choose an option between 1-6 ('6' means Data will be deleted)): ")
+        if '1' <= prompt <= '6':
             return prompt
         else:
-            logger.error("\n")
+            print("\n")
             logger.error("Invalid option!!!")
 
 
@@ -90,6 +74,7 @@ def main():
     print("The application measures the Redis memory optimisation")
     time.sleep(1)
     selectedOps = getOperationSet()
+    print(f"The selected option is {selectedOps}")
 
     # First loads raw data
     # Calculates memory & Time taken
@@ -98,7 +83,7 @@ def main():
     # Calculates the difference
     if int(selectedOps) == 1:
         startTime = time.time()
-        Dataloader(conn).generateV2(pattern="_SAM_:", commands=commands)
+        Dataloader(conn).generate(pattern="_SAM_:", commands=commands)
         endTime = time.time()
         output.append(f"Time taken to ingest raw data {(endTime - startTime):.3f} seconds")
         print(f"Time taken to ingest raw data {(endTime - startTime):.3f} seconds")
@@ -110,7 +95,7 @@ def main():
 
         conn.flushdb()
         startTime2 = time.time()
-        Dataloader(conn).generateAndCompressV2(pattern="_SAM_:", commands=commands)
+        Dataloader(conn).generateAndCompress(pattern="_SAM_:", commands=commands)
         endTime2 = time.time()
         output.append(f"Time taken to ingest compressed data {(endTime2 - startTime2):.3f} seconds")
         print(f"Time taken to ingest compressed data {(endTime2 - startTime2):.3f} seconds")
@@ -126,7 +111,7 @@ def main():
     # Only loads raw data
     elif int(selectedOps) == 2:
         startTime = time.time()
-        Dataloader(conn).generateV2(pattern="_SAM_:", commands=commands)
+        Dataloader(conn).generate(pattern="_SAM_:", commands=commands)
         endTime = time.time()
         output.append(f"Time taken to ingest raw data {(endTime - startTime):.3f} seconds")
         print(f"Time taken to ingest raw data {(endTime - startTime):.3f} seconds")
@@ -137,7 +122,7 @@ def main():
     # Only loads compressed data
     elif int(selectedOps) == 3:
         startTime = time.time()
-        Dataloader(conn).generateAndCompressV2(pattern="_SAM_:", commands=commands)
+        Dataloader(conn).generateAndCompress(pattern="_SAM_:", commands=commands)
         endTime = time.time()
         output.append(f"Time taken to ingest compressed data {(endTime - startTime):.3f} seconds")
         print(f"Time taken to ingest compressed data {(endTime - startTime):.3f} seconds")
@@ -147,7 +132,7 @@ def main():
 
     # Reads raw data (This first generates sample raw data) and records the Time taken
     elif int(selectedOps) == 4:
-        Dataloader(conn).generateV2(pattern="_SAM_:", commands=commands)
+        Dataloader(conn).generate(pattern="_SAM_:", commands=commands)
         startTime = time.time()
         DataReader(conn).read(pattern="_SAM_:")
         endTime = time.time()
@@ -156,7 +141,7 @@ def main():
 
     # Reads compressed data, decodes it (This first generates sample compressed data) and records the Time taken
     elif int(selectedOps) == 5:
-        Dataloader(conn).generateAndCompressV2(pattern="_SAM_:", commands=commands)
+        Dataloader(conn).generateAndCompress(pattern="_SAM_:", commands=commands)
         startTime = time.time()
         DataReader(conn).readAndDecompress(pattern="_SAM_:")
         endTime = time.time()

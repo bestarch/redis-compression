@@ -12,3 +12,7 @@ java/.settings/
 nodeJS/node_modules/
 nodeJS/.vscode/
 python/output.txt
+python/generator/__pycache__/generate.cpython-311.pyc
+python/redis_connection/__pycache__/connection.cpython-311.pyc
+python/util/__pycache__/dsType.cpython-311.pyc
+python/reader/__pycache__/read.cpython-311.pyc
